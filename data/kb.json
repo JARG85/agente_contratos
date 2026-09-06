@@ -1,0 +1,26 @@
+[
+  {
+    "id": "kb-001",
+    "url": "https://kb.interna.com/cuenta/reseteo-contrasena",
+    "title": "Cómo restablecer tu contraseña",
+    "category": "password_reset",
+    "keywords": ["contraseña", "clave", "password", "resetear", "restablecer", "cambiar clave", "no puedo entrar", "olvide", "olvidé", "bloqueada", "bloqueado", "acceso", "login", "iniciar sesion", "iniciar sesión"],
+    "content": "Para restablecer tu contraseña: 1) Ve a la pantalla de inicio de sesión y selecciona 'Olvidé mi contraseña'. 2) Ingresa el correo asociado a tu cuenta. 3) Revisa tu bandeja de entrada (y spam) por un enlace válido durante 30 minutos. 4) Define una nueva contraseña de al menos 8 caracteres. Si tras 3 intentos el enlace no llega, se debe verificar que el correo esté bien escrito en el sistema."
+  },
+  {
+    "id": "kb-002",
+    "url": "https://kb.interna.com/facturacion/descargar-factura",
+    "title": "Cómo descargar tu factura",
+    "category": "billing_basic",
+    "keywords": ["factura", "descargar factura", "pdf", "recibo", "comprobante", "descarga", "donde encuentro mi factura"],
+    "content": "Las facturas quedan disponibles en el portal de cliente, sección 'Facturación > Historial'. Se pueden descargar en PDF desde el día siguiente al corte. Si no aparece la factura del mes actual, indicar que el ciclo de facturación aún no cierra."
+  },
+  {
+    "id": "kb-003",
+    "url": "https://kb.interna.com/facturacion/entender-cobro",
+    "title": "Cómo entender los conceptos de tu factura",
+    "category": "billing_basic",
+    "keywords": ["cobro", "cargo", "por que me cobraron", "por qué me cobraron", "concepto", "detalle de cobro", "explicar factura", "impuestos", "iva"],
+    "content": "Cada factura incluye: cargo fijo del plan, consumo adicional (si aplica), impuestos según la jurisdicción, y prorrateos por cambios de plan a mitad de ciclo. El detalle línea por línea está en la sección 'Ver desglose' del portal."
+  }
+]
