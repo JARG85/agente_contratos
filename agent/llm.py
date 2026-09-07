@@ -17,7 +17,7 @@ import os
 import time
 from pathlib import Path
 
-import httpx2
+import httpx
 from dotenv import load_dotenv
 from google import genai
 from google.genai import errors, types
@@ -121,7 +121,7 @@ def classify_and_draft(subject: str, body: str, kb_hits: list[dict]) -> dict:
                 temperature=0,
             ),
         )
-    except (httpx2.TimeoutException,) as e:
+    except httpx.TimeoutException as e:
         raise LLMTimeoutError(str(e)) from e
     except errors.ServerError as e:
         raise LLMUnavailableError(str(e)) from e
