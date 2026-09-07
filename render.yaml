@@ -4,7 +4,13 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    # --timeout 120: el timeout de worker de gunicorn (default 30s) puede
+    # quedarse corto cuando Gemini está lento/degradado, ya que
+    # agent/llm.py reintenta hasta 3 veces con backoff antes de responder.
+    # Si gunicorn mata el worker por timeout, la respuesta 500 la genera
+    # gunicorn directamente (sin pasar por Flask/flask-cors), y el
+    # navegador la ve como "CORS header missing" en vez del error real.
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --timeout 120
     envVars:
       # Secretos: se piden en el dashboard de Render al crear el servicio
       # (sync: false = no viven en este archivo ni en el repo).
