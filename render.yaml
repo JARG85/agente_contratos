@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: agente-triage-backend
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    envVars:
+      # Secretos: se piden en el dashboard de Render al crear el servicio
+      # (sync: false = no viven en este archivo ni en el repo).
+      - key: GEMINI_API_KEY
+        sync: false
+      # URL(es) del frontend desplegado, separadas por coma. Ejemplo:
+      # https://ft-agente.vercel.app
+      - key: CORS_ORIGINS
+        sync: false

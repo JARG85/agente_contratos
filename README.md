@@ -17,8 +17,9 @@ data/kb.json            # base de conocimiento de ejemplo
 tests/cases.json        # 11 casos de evaluación (incluye adversariales)
 tests/run_eval.py       # corre la suite y reporta pass/fail
 NOTA_ARQUITECTURA.md    # por qué agente, costo/latencia, qué se rompe a 100x
-.env.example            # variable requerida (plantilla, sí se commitea)
-.env                    # tu clave real (NO se commitea, ver .gitignore)
+.env.example            # variables requeridas (plantilla, sí se commitea)
+.env                    # tus valores reales (NO se commitea, ver .gitignore)
+render.yaml             # blueprint de despliegue en Render (ver sección abajo)
 ```
 
 ## Cómo correr
@@ -54,6 +55,36 @@ Salida esperada de `run_eval.py`: **11/11 casos correctos** (exit code 0). Sin
 deterministas y no tocan la API real); los 2 que sí llaman a Gemini (`T01`,
 `T02`) fallan con un mensaje claro pidiendo crear `.env`, en vez de romper la
 suite completa.
+
+## Desplegar en Render (gratis)
+
+1. Ve a [dashboard.render.com](https://dashboard.render.com), **New +** →
+   **Blueprint**, y selecciona este repo (`agente_contratos`). Render lee
+   `render.yaml` solo.
+2. Te va a pedir los valores de los env vars marcados `sync: false`:
+   - `GEMINI_API_KEY` → tu clave de Google AI Studio.
+   - `CORS_ORIGINS` → la URL del frontend ya desplegado en Vercel (ver
+     `../agente_ft/README.md`), p.ej. `https://ft-agente.vercel.app`. Si el
+     frontend aún no existe, pon un placeholder y actualízalo después desde
+     el dashboard (Settings → Environment) — no hace falta re-deployar el
+     código, solo el servicio recoge la variable nueva.
+3. Deploy. El tier free "duerme" tras ~15 min sin tráfico y tarda unos
+   segundos en despertar con la primera petición — normal para una demo, no
+   apto para el volumen de la spec (ver `NOTA_ARQUITECTURA.md`).
+4. Prueba `https://<tu-servicio>.onrender.com/health` — debe responder
+   `{"status": "ok"}`.
+
+**Si el build falla en la versión de Python:** este proyecto usa `.python-version`
+(3.14.0, muy reciente) para fijar la versión. Si la imagen de build de
+Render todavía no la soporta, cambia `PYTHON_VERSION` en Settings →
+Environment del servicio a una versión anterior (3.11/3.12) — el código no
+usa nada específico de 3.14.
+
+**Nota sobre el modelo:** `gemini-3.6-flash` en el tier gratuito tiene una
+cuota de 20 requests/día (ver hallazgo real en `NOTA_ARQUITECTURA.md`) — para
+una demo en vivo con evaluadores puede agotarse rápido; ten un plan B
+(capturas de pantalla, o habilitar facturación en el proyecto de Google
+Cloud) si vas a demostrarlo varias veces el mismo día.
 
 ## Qué NO puede hacer el agente (por diseño, no solo por instrucción)
 

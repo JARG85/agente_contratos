@@ -53,11 +53,19 @@ retrieval y guardrails son operaciones locales de milisegundos.
   la probabilidad de que un artículo mal etiquetado cruce de un tenant a
   otro crece. A 100x hace falta filtrado por tenant en la propia consulta al
   índice, no solo en la carga de datos.
-- **Rate limits del proveedor del LLM:** a cientos de tickets/hora un solo
-  proveedor sin colas ni backpressure empieza a devolver 429/503. La política
-  de reintento con backoff (`agent/llm.py::call_with_retry`) amortigua picos
-  cortos, pero a 100x se necesita una cola (p.ej. worker asíncrono +
-  cola de mensajes) en vez de procesar el ticket en la misma request HTTP.
+- **Rate limits del proveedor del LLM:** esto no es hipotético — durante las
+  pruebas de este mismo prototipo, el tier gratuito de Gemini para
+  `gemini-3.6-flash` se agotó con un 429 `RESOURCE_EXHAUSTED` ("limit: 20,
+  ... generate_content_free_tier_requests ... per day"). Es decir, el tier
+  gratuito se rompe muchísimo antes de "100x": ni siquiera alcanza para un
+  día de pruebas manuales, y menos para "cientos de tickets/hora". La
+  política de reintento con backoff (`agent/llm.py::call_with_retry`)
+  amortigua picos cortos de un 429/503 transitorio, pero contra una cuota
+  diaria agotada simplemente reintenta 3 veces en vano y termina en
+  `ESCALATE` — que es el comportamiento correcto (degradar a revisión
+  humana), pero confirma que producción necesita un tier de pago con cuota
+  acorde al volumen, y a más escala, una cola (worker asíncrono + cola de
+  mensajes) en vez de procesar el ticket en la misma request HTTP.
 - **El servidor de desarrollo de Flask** (`app.run(debug=True)`) no está
   pensado para ese volumen concurrente; en producción iría detrás de un
   servidor WSGI real (gunicorn/uwsgi) con varios workers.
