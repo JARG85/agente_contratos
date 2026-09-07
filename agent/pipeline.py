@@ -9,8 +9,12 @@ tokens en el LLM — ver NOTA_ARQUITECTURA.md, sección de coste):
   4. Detectar intenciones que requieren sistemas transaccionales (fuera de
      alcance por diseño, sin importar lo que "opine" el LLM).
   5. Tool: buscar en la base de conocimiento (RAG).
-  6. LLM: clasificar y redactar borrador, con reintento ante fallo.
-  7. Forzar ESCALATE si la confianza queda por debajo del umbral.
+  6. Si no hay ningún artículo de KB relevante, escalar sin llamar al LLM
+     (no hay nada que citar, y dejar que el modelo "opine" sin KB es la
+     puerta de entrada a la alucinación).
+  7. LLM real (Claude, vía Anthropic API): clasificar y redactar borrador,
+     con reintento ante fallo transitorio.
+  8. Forzar ESCALATE si la confianza queda por debajo del umbral.
 """
 from . import guardrails, kb, llm
 
@@ -76,6 +80,19 @@ def process_ticket(ticket: dict) -> dict:
         return response
 
     kb_hits = kb.search(combined_text)
+
+    if not kb_hits:
+        response.update({
+            "action": "ESCALATE",
+            "draft_response": (
+                "No se encontró información en la base de conocimiento para "
+                "resolver esta solicitud con seguridad. Escalado a soporte N2."
+            ),
+            "kb_citations": [],
+            "confidence_score": 0.0,
+            "reason": "no_kb_match",
+        })
+        return response
 
     try:
         result = llm.call_with_retry(llm.classify_and_draft, subject, body, kb_hits)

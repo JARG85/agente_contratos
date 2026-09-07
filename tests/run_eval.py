@@ -33,6 +33,8 @@ def run_case(case: dict) -> tuple[bool, str]:
         result = process_ticket(case["input"])
     except InvalidTicketError as e:
         return False, f"InvalidTicketError inesperado: {e}"
+    except Exception as e:  # p.ej. ANTHROPIC_API_KEY ausente/ inválida
+        return False, f"{type(e).__name__}: {e}"
 
     checks = []
 

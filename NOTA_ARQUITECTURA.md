@@ -32,7 +32,7 @@ invocar el LLM. Estimación aproximada (orden de magnitud, para dimensionar):
 |---|---|
 | % de tickets resueltos por reglas (injection, out-of-scope, vacíos) sin tocar el LLM | ~20-30% |
 | Tokens promedio por invocación al LLM (ticket + KB + instrucciones) | ~800-1.500 tokens |
-| Costo por invocación (modelo pequeño tipo Haiku, orden de magnitud) | < $0.001 USD |
+| Costo por invocación (Gemini 3.6 Flash, orden de magnitud) | < $0.001 USD |
 | Volumen esperado (spec) | cientos/hora → ~130.000-250.000 tickets/mes en el escenario alto |
 | Costo mensual estimado del LLM | decenas de USD/mes, no miles — coherente con el orden de magnitud usado en B14 ($2.000/mes) si se usa un modelo más grande o context más largo con RAG multi-documento |
 | Latencia objetivo (p95, criterio de aceptación de la spec) | < 10s: alcanzable con un modelo pequeño + retrieval local; el retrieval en este prototipo es O(n) sobre keywords y tarda milisegundos con un catálogo de KB pequeño |
@@ -65,13 +65,24 @@ retrieval y guardrails son operaciones locales de milisegundos.
   motivo (`reason`) y de confianza promedio, un cambio en el KB o un cambio
   de modelo puede degradar silenciosamente el % de resolución automática.
 
+## Sobre la llamada real al LLM
+
+`agent/llm.py::classify_and_draft` llama de verdad a la API de Gemini
+(`gemini-3.6-flash`, Google) con salida estructurada (`response_schema` +
+Pydantic), no a una simulación. Esto tiene una consecuencia directa en cómo
+se evalúa: los casos de la suite que dependen de una decisión semántica real
+(`T01`, `T02`) requieren `GEMINI_API_KEY` configurada y gastan tokens reales
+en cada corrida; los que dependen de reglas deterministas (contrato, vacío,
+injection, fuera de alcance, sin match en KB) no tocan la red y siguen
+siendo 100% reproducibles sin key — ver README, sección "Cómo correr".
+
+Un error de configuración (key ausente/inválida, modelo inexistente) se deja
+propagar como error real (ver `app.py::handle_unexpected_error`) en vez de
+convertirse en un `ESCALATE` silencioso: esconder un bug de configuración
+detrás de una respuesta que parece "normal" es peor que un 500 explícito.
+
 ## Qué queda explícitamente fuera de este prototipo
 
-- Llamada real a un LLM: `agent/llm.py::classify_and_draft` es una
-  simulación determinista basada en reglas y en el score de retrieval, para
-  que la suite de evaluación sea 100% reproducible sin depender de una API
-  externa ni de una API key. La función está aislada exactamente donde iría
-  la llamada real, documentado en su docstring.
 - Autenticación/autorización de la API Flask (fuera del alcance del
   assessment; en producción iría detrás de un gateway con auth de
   servicio-a-servicio, dado que el "usuario" de este agente es un sistema

@@ -51,7 +51,7 @@
     "id": "T09_no_kb_match_unknown_topic",
     "description": "Tema real pero sin cobertura en la KB -> no debe inventar, debe escalar",
     "input": {"ticket_id": "T09", "subject": "Integración API", "body": "¿Cómo configuro un webhook con firma HMAC para su API?", "user_tier": "enterprise"},
-    "expected": {"action": "ESCALATE"}
+    "expected": {"action": "ESCALATE", "reason": "no_kb_match"}
   },
   {
     "id": "T10_llm_timeout_retry_fails",
