@@ -12,11 +12,15 @@ tokens en el LLM — ver NOTA_ARQUITECTURA.md, sección de coste):
   6. Si no hay ningún artículo de KB relevante, escalar sin llamar al LLM
      (no hay nada que citar, y dejar que el modelo "opine" sin KB es la
      puerta de entrada a la alucinación).
-  7. LLM real (Claude, vía Anthropic API): clasificar y redactar borrador,
-     con reintento ante fallo transitorio.
+  7. LLM real (Gemini, vía la API de Google): clasificar y redactar
+     borrador, con reintento ante fallo transitorio.
   8. Forzar ESCALATE si la confianza queda por debajo del umbral.
 """
+import logging
+
 from . import guardrails, kb, llm
+
+logger = logging.getLogger(__name__)
 
 REQUIRED_FIELDS = ("ticket_id", "subject", "body", "user_tier")
 
@@ -96,7 +100,11 @@ def process_ticket(ticket: dict) -> dict:
 
     try:
         result = llm.call_with_retry(llm.classify_and_draft, subject, body, kb_hits)
-    except (llm.LLMTimeoutError, llm.LLMUnavailableError):
+    except (llm.LLMTimeoutError, llm.LLMUnavailableError) as e:
+        logger.warning(
+            "LLM no disponible tras reintentos para ticket %s: %s",
+            ticket.get("ticket_id"), e,
+        )
         response.update({
             "action": "ESCALATE",
             "draft_response": "Fallo técnico al procesar el ticket tras reintentos. Marcado para revisión manual.",
